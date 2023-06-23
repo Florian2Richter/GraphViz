@@ -1,3 +1,3 @@
 # GraphViz
 This repository continas different examplex for python based graph visualizations
-![Graph](Graphs/graph.png?raw=true)
+![Graph](Graphs/graph_3d.png?raw=true)
