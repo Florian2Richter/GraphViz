@@ -30,7 +30,8 @@ Change into the repository directory:
    ```bash
    cd networkx-animation
 
-2. Run the Python script:
+
+Run the Python script:
    
    python animation.py
 
