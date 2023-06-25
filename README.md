@@ -24,12 +24,13 @@ pip install networkx matplotlib Pillow tqdm
 
    ```bash
    git clone https://github.com/Florian2Richtere/GraphViz.git
+   ```
 
 Change into the repository directory:
 
    ```bash
    cd networkx-animation
-
+   ```
 
 Run the Python script:
    
