@@ -27,6 +27,7 @@ pip install networkx matplotlib Pillow tqdm
 
 Change into the repository directory:
 
+   ```bash
    cd networkx-animation
 
 2. Run the Python script:
