@@ -26,15 +26,16 @@ pip install networkx matplotlib Pillow tqdm
    git clone https://github.com/Florian2Richtere/GraphViz.git
    ```
 
-Change into the repository directory:
+2. Change into the repository directory:
 
    ```bash
    cd networkx-animation
    ```
 
-Run the Python script:
-   
+3. Run the Python script:
+   ```bash
    python animation.py
+   ```
 
 4. The script will generate a series of PNG images in the "output_images" directory and then create an animated GIF named animation.gif.
 
