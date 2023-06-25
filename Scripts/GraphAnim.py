@@ -86,5 +86,5 @@ for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
     images.append(image)
 
 # Save the animation as a GIF
-output_filename = 'animation.gif'
+output_filename = f'{output_dir}/animation.gif'
 images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
