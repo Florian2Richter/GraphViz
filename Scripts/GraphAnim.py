@@ -16,20 +16,8 @@ output_dir = '../output_images'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
+
 def color_nodes(G):
-    community_map = {}
-    # create community map
-    for node in G.nodes(data=True):
-        if node[1]["club"] == "Mr. Hi":
-            community_map[node[0]] = 0
-        else:
-            community_map[node[0]] = 1
-    #create node coloring according to commuinty map
-    node_color = []
-    color_map = {0: 0, 1: 1}
-    node_color = [color_map[community_map[node]] for node in G.nodes()]
-    return node_color
-def color_nodes_general(G):
     community_map = {}
     # obtain all possible keys from the networkx nodes dictionary
     nodes = G.nodes(data=True)
@@ -92,7 +80,7 @@ gml = gml.split("\n")[1:]
 G = nx.parse_gml(gml)  # parse gml data
 
 # color nodes according to their community
-node_color = color_nodes_general(G)
+node_color = color_nodes(G)
 
 # generate data for scatter plot
 #  3d spring layout
