@@ -1,8 +1,8 @@
 import networkx as nx
-from networkx.algorithms.community import greedy_modularity_communities
-import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import os
+import numpy as np
 from PIL import Image
 import numpy as np
 import urllib.request
@@ -114,7 +114,7 @@ def create_axes(fig: plt.figure,
                 node_color: list[int],
                 dim: int,
                 print_label: bool = False,
-                azi: float = 20) -> matplotlib.axes.Axes:
+                azi: float = 20) -> Axes:
     """
     Create a 2D or 3D axis with visual elements such as nodes and edges.
 
@@ -149,6 +149,15 @@ def create_axes(fig: plt.figure,
 
     if dim == 2:
         ax = fig.add_subplot(111)
+        # rotate points according to azimuth
+        theta = np.radians(azi)
+        rotation_matrix = np.array([
+                            [np.cos(theta), -np.sin(theta)],
+                            [np.sin(theta), np.cos(theta)]
+                            ])
+        #transform nodes and edges
+        nodes = np.array([rotation_matrix @ node for node in nodes])
+        edges = np.array([(rotation_matrix @ u, rotation_matrix @ v) for u, v in edges])
         # Add labels
         if print_label:
             label = range(len(node_color))
@@ -168,98 +177,65 @@ def create_axes(fig: plt.figure,
     
     return ax
 
+def _convert_fig_image(fig):
+    canvas = FigureCanvas(fig)
+    canvas.draw()
+    renderer = canvas.get_renderer()
+    image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
+    return image
+
+def generate_image(graph, node_color, dimension = 3, optimal_dist = 0.15, max_iterations = 20, print_label = False, azi = 0):
+    # generates PIL image 
+    nodes, edges = graph_coordinates(graph, dimension, optimal_dist, max_iterations)
+    fig = plt.figure()
+    ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
+    image = _convert_fig_image(fig)
+    #plt.clf()
+    plt.close()
+    
+    return image
+
+# def generate_animation_azi(graph,node_color,max_azi):
+#     images = []
+#     for azi in tqdm(range(0, max_azi), desc='Generating Images'):
+#         nodes, edges = graph_coordinates(graph, 3, optimal_dist, max_iterations)
+#         ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
+#         fig.tight_layout()
+#         # Convert the plot to an image object
+#         canvas = FigureCanvas(fig)
+#         canvas.draw()
+#         renderer = canvas.get_renderer()
+#         image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
+#         images.append(image)
+#         plt.clf()
+
+
 # available graphs
 graphs = { 'football' : 'football',
               'karate' : 'karate'}
 
 
 # constants
-dimension = 3
+dimension = 2
 optimal_dist = 0.15
 max_iterations = 100
 print_label = False
+initial_azi = 0
+azimuth_max = 360
+dataset_key = 'football'
 
 # load dataset
-G = load_dataset(graphs['football'])
+G = load_dataset(graphs[dataset_key])
 
 # color nodes according to their community
 node_color = color_nodes(G)
 
-# generate coordinates
-nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
+images = []
+for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
+    image = generate_image(G, node_color, dimension, optimal_dist, max_iterations, print_label, azi = azi)
+    images.append(image)
 
-#print(nodes)
-# intialize plot
-fig = plt.figure()
-azi = 20 # standard value for 3-D Plotting
-
-# create the plot
-ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
-
-# show the plot
-plt.show()
-
-
-# def generate_animation(graph, node_color, dimension=2, spring_constant=0.15, azimuth_max)
-#     if dimension == 2:
-#         # 2-D code here
-
-#         fig, ax = plt.subplots(figsize=(15, 9))
-#         plot_options = {"node_size": 100, "with_labels": True, "width": 0.15}
-#         pos = nx.spring_layout(G, iterations=20, seed=1721, k=0.1)
-#         ax.axis("off")
-#         nx.draw_networkx(G, pos=pos, ax=ax, node_color = node_color, labels = node_labels ,**plot_options)
-    
-#     if dimension == 3:
-#         #3-D code here
-    
-#     else:
-#         raise ValueError("we only support 2-D and 3-D plots")
-
-
-
-# fig = plt.figure()
-# azimuth_max = 360
-# images = []
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
-#     ax = create_axes(fig, node_xyz, edge_xyz, node_color, azi)
-#     fig.tight_layout()
-#     # Convert the plot to an image object
-#     canvas = FigureCanvas(fig)
-#     canvas.draw()
-#     renderer = canvas.get_renderer()
-#     image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
-#     images.append(image)
-#     plt.clf()
-
-# # Save the animation as a GIF
-# output_filename = f'{output_dir}/animation.gif'
-# images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
-
-# fig = plt.figure()
-# azimuth_max = 360
-# images = []
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# for k in tqdm(np.arange(0.01,10,0.1), desc='Generating Images'):
-#     # generating 3D representation of graph
-#     node_xyz, edge_xyz = graph_3D(G, k)
-
-#     # generate axes object
-#     ax = create_axes(fig, node_xyz, edge_xyz, node_color, 20)
-#     fig.tight_layout()
-
-#     # Convert the plot to an image object and append to list
-#     canvas = FigureCanvas(fig)
-#     canvas.draw()
-#     renderer = canvas.get_renderer()
-#     image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
-#     images.append(image)
-    
-#     # Clear the plot for performance reasons
-#     plt.clf()
-
-# # Save the animation as a GIF
-# output_filename = f'{output_dir}/animation.gif'
-# images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
-# print(f'successfully generated animation at {output_filename}')
+# Save the animation as a GIF
+output_filename = f'{output_dir}/animation_{dataset_key}_{dimension}.gif'
+images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
+print(f'successfully generated animation at {output_filename}')
