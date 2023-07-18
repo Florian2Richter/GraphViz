@@ -1,21 +1,21 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import os
-import numpy as np
-from PIL import Image
-import numpy as np
 import urllib.request
 import io
 import zipfile
+import networkx as nx
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from mpl_toolkits.mplot3d import Axes3D
+from PIL import Image
 from tqdm import tqdm
 
 # Output directory for the images
-output_dir = '../output_images'
+OUTPUT_DIR = '../output_images'
 
 # Create the output directory if it doesn't exist
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 
 
 def load_dataset(key: str) -> nx.Graph:
@@ -46,8 +46,10 @@ def color_nodes(G: nx.Graph) -> list[int]:
         G (networkx.Graph): The input graph.
 
     Returns:
-        list: A list containing the colors of the nodes. The colors are represented by
-              integer indices corresponding to the unique values of a specified feature in the graph.
+        list: A list containing the colors of the nodes.
+          The colors are represented by integer indices 
+          corresponding to the unique values of a specified
+          feature in the graph.
 
     Raises:
         ValueError: If there is more than one feature in the graph node data.
@@ -114,7 +116,7 @@ def create_axes(fig: plt.figure,
                 node_color: list[int],
                 dim: int,
                 print_label: bool = False,
-                azi: float = 20) -> Axes:
+                azi: float = 20) -> Axes3D:
     """
     Create a 2D or 3D axis with visual elements such as nodes and edges.
 
@@ -195,19 +197,6 @@ def generate_image(graph, node_color, dimension = 3, optimal_dist = 0.15, max_it
     
     return image
 
-# def generate_animation_azi(graph,node_color,max_azi):
-#     images = []
-#     for azi in tqdm(range(0, max_azi), desc='Generating Images'):
-#         nodes, edges = graph_coordinates(graph, 3, optimal_dist, max_iterations)
-#         ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
-#         fig.tight_layout()
-#         # Convert the plot to an image object
-#         canvas = FigureCanvas(fig)
-#         canvas.draw()
-#         renderer = canvas.get_renderer()
-#         image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
-#         images.append(image)
-#         plt.clf()
 
 
 # available graphs
@@ -220,7 +209,7 @@ dimension = 2
 optimal_dist = 0.15
 max_iterations = 100
 print_label = False
-initial_azi = 0
+# initial_azi = 0
 azimuth_max = 360
 dataset_key = 'football'
 
@@ -230,12 +219,13 @@ G = load_dataset(graphs[dataset_key])
 # color nodes according to their community
 node_color = color_nodes(G)
 
+# Generate animation here
 images = []
 for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
     image = generate_image(G, node_color, dimension, optimal_dist, max_iterations, print_label, azi = azi)
     images.append(image)
 
 # Save the animation as a GIF
-output_filename = f'{output_dir}/animation_{dataset_key}_{dimension}.gif'
+output_filename = f'{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif'
 images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
 print(f'successfully generated animation at {output_filename}')
