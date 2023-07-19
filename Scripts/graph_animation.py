@@ -165,10 +165,10 @@ def create_axes(
     if dim == 3:
         # optical fine tuning
         axis.view_init(elev=50.0, azim=azi)
-        RADIUS = 1.25  # Control this value.
-        axis.set_xlim3d(-RADIUS / 2, RADIUS / 2)
-        axis.set_zlim3d(-RADIUS / 2, RADIUS / 2)
-        axis.set_ylim3d(-RADIUS / 2, RADIUS / 2)
+        radius = 1.25  # Control this value for axis limits of the plot
+        axis.set_xlim3d(-radius / 2, radius / 2)
+        axis.set_zlim3d(-radius / 2, radius / 2)
+        axis.set_ylim3d(-radius / 2, radius / 2)
         if print_label:
             # Add labels
             label = range(len(node_color))
@@ -244,37 +244,61 @@ def generate_image(nodes, edges, node_color, dimension=3, print_label=False, azi
 
 
 def main():
+    """
+    Generate an animated GIF of a network visualization.
+
+    Available graphs:
+        - "football": Football network
+        - "karate": Karate club network
+
+    Description:
+        The `main` function first defines available graphs, such as the football and
+        karate networks. It sets the parameters for the plot, including the dimension
+        (2D or 3D), the optimal Fruchterman-Reingold distance for spring_layout
+        between two nodes, the maximum number of iterations before the iteration algorithm stops,
+        and whether to print labels near the nodes.
+
+        The function then loads the selected dataset from the available graphs,
+        colorizes the nodes based on their community, and generates initial coordinates
+        for the nodes and edges. Subsequently, it creates an animation by varying the
+        azimuth angle from 0 to 360 degrees in a loop.
+
+        The generated animation is saved as a GIF file in the specified output
+        directory. The GIF showcases the evolution of the network visualization as the
+        azimuth angle changes.
+
+    """
     # available graphs
     graphs = {"football": "football", "karate": "karate"}
 
-    # constants
-    DIMENSION = 2
-    OPTIMAL_DIST = 0.15  # optimal Fruchterman-Reingold distance for spring_layout between two nodes
-    MAX_ITERATIONS = 100  # maximal number of iterations for the
-    PRINT_LABEL = False
+    # parameters of the plot
+    dimension = 2
+    optimal_dist = 0.15  # optimal Fruchterman-Reingold distance for spring_layout between two nodes
+    max_iterations = 100  # maximal number of iterations for the
+    print_label = False
     # initial_azi = 0
-    AZIMUTH_MAX = 360
-    DATASET_KEY = "football"
+    azimuth_max = 360
+    dataset_key = "football"
 
     # load dataset
-    graph = load_dataset(graphs[DATASET_KEY])
+    graph = load_dataset(graphs[dataset_key])
 
     # color nodes according to their community
     node_color = color_nodes(graph)
 
     # generate the initial data
-    nodes, edges = graph_coordinates(graph, DIMENSION, OPTIMAL_DIST, MAX_ITERATIONS)
+    nodes, edges = graph_coordinates(graph, dimension, optimal_dist, max_iterations)
 
     # Generate animation here
     images = []
-    for azi in tqdm(range(0, AZIMUTH_MAX), desc="Generating Images"):
+    for azi in tqdm(range(0, azimuth_max), desc="Generating Images"):
         image = generate_image(
-            nodes, edges, node_color, DIMENSION, PRINT_LABEL, azi=azi
+            nodes, edges, node_color, dimension, print_label, azi=azi
         )
         images.append(image)
 
     # Save the animation as a GIF
-    output_filename = f"{OUTPUT_DIR}/animation_{DATASET_KEY}_{DIMENSION}.gif"
+    output_filename = f"{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif"
     images[0].save(
         output_filename, save_all=True, append_images=images[1:], duration=100, loop=0
     )
