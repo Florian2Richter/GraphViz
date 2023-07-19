@@ -130,14 +130,14 @@ def graph_coordinates(
 
 
 def create_axes(
-    fig: plt.figure,
+    axis: Union[Axes3D, plt.Axes],
     nodes: np.ndarray,
     edges: list[np.ndarray],
     node_color: list[int],
     dim: int,
     print_label: bool = False,
     azi: float = 20,
-) -> Union[Axes3D, plt.Axes]:
+) -> None:
     """
     Create a 2D or 3D axis with visual elements such as nodes and edges.
 
@@ -163,23 +163,21 @@ def create_axes(
     """
 
     if dim == 3:
-        ax = fig.add_subplot(111, projection="3d")
         # optical fine tuning
-        ax.view_init(elev=50.0, azim=azi)
+        axis.view_init(elev=50.0, azim=azi)
         RADIUS = 1.25  # Control this value.
-        ax.set_xlim3d(-RADIUS / 2, RADIUS / 2)
-        ax.set_zlim3d(-RADIUS / 2, RADIUS / 2)
-        ax.set_ylim3d(-RADIUS / 2, RADIUS / 2)
+        axis.set_xlim3d(-RADIUS / 2, RADIUS / 2)
+        axis.set_zlim3d(-RADIUS / 2, RADIUS / 2)
+        axis.set_ylim3d(-RADIUS / 2, RADIUS / 2)
         if print_label:
             # Add labels
             label = range(len(node_color))
             for i in range(len(node_color)):
-                ax.text(nodes[i][0], nodes[i][1], nodes[i][2], label[i])
+                axis.text(nodes[i][0], nodes[i][1], nodes[i][2], label[i])
 
     if dim == 2:
-        ax = fig.add_subplot(111)
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-1, 1)
+        axis.set_xlim(-1, 1)
+        axis.set_ylim(-1, 1)
 
         # rotate points according to azimuth
         theta = np.radians(azi)
@@ -193,20 +191,20 @@ def create_axes(
         if print_label:
             label = range(len(node_color))
             for i in range(len(node_color)):
-                ax.text(nodes[i][0], nodes[i][1], label[i])
+                axis.text(nodes[i][0], nodes[i][1], label[i])
 
     # create the plot using matplotlib's scatter function
-    ax.scatter(*nodes.T, s=100, ec="w", c=node_color)
+    axis.scatter(*nodes.T, s=100, ec="w", c=node_color)
 
     # Plot the edges
     for vizedge in edges:
-        ax.plot(*vizedge.T, color="tab:gray", linewidth=0.15)
+        axis.plot(*vizedge.T, color="tab:gray", linewidth=0.15)
 
     # Turn gridlines off
-    ax.grid(False)
-    ax.axis("off")
+    axis.grid(False)
+    axis.axis("off")
 
-    return ax
+    return axis
 
 
 def _convert_fig_image(fig):
@@ -218,9 +216,26 @@ def _convert_fig_image(fig):
 
 
 def generate_image(nodes, edges, node_color, dimension=3, print_label=False, azi=0):
-    # generates PIL image
+    """
+    Generate a PIL image of the network visualization.
+
+    Parameters:
+        nodes (numpy.ndarray): A 2D or 3D numpy array representing the coordinates of nodes.
+        edges (list[numpy.ndarray]): A list of 2D or 3D numpy arrays representing the
+                                     coordinates of edges.
+        node_color (list[int]): A list containing the colors of the nodes.
+        dimension (int, optional): The dimension of the plot. Use 2 for 2D plots or 3 for 3D plots.
+                                   Default is 3.
+        print_label (bool, optional): If True, labels will be printed next to the nodes.
+                                      Default is False.
+        azi (float, optional): The azimuthal viewing angle of the 3D plot. Default is 0.
+
+    Returns:
+        PIL.Image: The generated PIL image of the network visualization.
+    """
     fig = plt.figure()
-    ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
+    axis = fig.add_subplot(111, projection="3d" if dimension == 3 else None)
+    create_axes(axis, nodes, edges, node_color, dimension, print_label, azi=azi)
     image = _convert_fig_image(fig)
     # plt.clf()
     plt.close()
