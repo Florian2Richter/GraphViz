@@ -9,6 +9,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from tqdm import tqdm
+import cProfile
 
 # Output directory for the images
 OUTPUT_DIR = '../output_images'
@@ -198,36 +199,44 @@ def generate_image(nodes, edges, node_color, dimension = 3, print_label = False,
 
 
 
-# available graphs
-graphs = { 'football' : 'football',
-              'karate' : 'karate'}
+def main():
+    # available graphs
+    graphs = {'football': 'football', 'karate': 'karate'}
+
+    # constants
+    dimension = 3
+    optimal_dist = 0.15
+    max_iterations = 100
+    print_label = False
+    # initial_azi = 0
+    azimuth_max = 360
+    dataset_key = 'football'
+
+    # load dataset
+    G = load_dataset(graphs[dataset_key])
+
+    # color nodes according to their community
+    node_color = color_nodes(G)
+
+    # generate the initial data
+    nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
+
+    # Generate animation here
+    images = []
+    for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
+        image = generate_image(nodes, edges, node_color, dimension, print_label, azi=azi)
+        images.append(image)
+
+    # Save the animation as a GIF
+    output_filename = f'{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif'
+    images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
+    print(f'successfully generated animation at {output_filename}')
 
 
-# constants
-dimension = 3
-optimal_dist = 0.15
-max_iterations = 100
-print_label = False
-# initial_azi = 0
-azimuth_max = 360
-dataset_key = 'football'
-
-# load dataset
-G = load_dataset(graphs[dataset_key])
-
-# color nodes according to their community
-node_color = color_nodes(G)
-
-# generate the initial data
-nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
-
-# Generate animation here
-images = []
-for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
-    image = generate_image(nodes, edges, node_color, dimension, print_label, azi = azi)
-    images.append(image)
-
-# Save the animation as a GIF
-output_filename = f'{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif'
-images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
-print(f'successfully generated animation at {output_filename}')
+if __name__ == "__main__":
+    # Profile the main function
+    profiler = cProfile.Profile()
+    profiler.enable()
+    main()
+    profiler.disable()
+    profiler.print_stats(sort="cumtime")
