@@ -4,15 +4,14 @@ import io
 import zipfile
 import cProfile
 import argparse
-import matplotlib.pyplot as plt
+from typing import Union
 import numpy as np
 import networkx as nx
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from tqdm import tqdm
-from typing import Union
-
+import matplotlib.pyplot as plt
 
 # Output directory for the images
 OUTPUT_DIR = "../animations"
@@ -23,32 +22,45 @@ if not os.path.exists(OUTPUT_DIR):
 
 
 def load_dataset(key: str) -> nx.Graph:
+    """
+    Load the specified network dataset.
+
+    Parameters:
+        key (str): The key representing the dataset to load.
+
+    Returns:
+        nx.Graph: The loaded networkx Graph.
+
+    Raises:
+        ValueError: If an invalid dataset key is provided.
+    """
+
     if key == "karate":
         return nx.karate_club_graph()
     if key == "football":
         url = "http://www-personal.umich.edu/~mejn/netdata/football.zip"
 
         sock = urllib.request.urlopen(url)  # open URL
-        s = io.BytesIO(sock.read())  # read into BytesIO "file"
+        stream = io.BytesIO(sock.read())  # read into BytesIO "file"
         sock.close()
 
-        zf = zipfile.ZipFile(s)  # zipfile object
-        txt = zf.read("football.txt").decode()  # read info file
-        gml = zf.read("football.gml").decode()  # read gml data
+        zip_file = zipfile.ZipFile(stream)  # zipfile object
+        # txt = zip_file.read("football.txt").decode()  # read info file
+        gml = zip_file.read("football.gml").decode()  # read gml data
         # throw away bogus first line with # from mejn files
         gml = gml.split("\n")[1:]
-        G = nx.parse_gml(gml)  # parse gml data
-        return G
-    else:
-        raise ValueError("you have to choose a valid dataset key")
+        graph = nx.parse_gml(gml)  # parse gml data
+        return graph
+
+    raise ValueError("you have to choose a valid dataset key")
 
 
-def color_nodes(G: nx.Graph) -> list[int]:
+def color_nodes(graph: nx.Graph) -> list[int]:
     """
     Color the nodes of the input graph G based on a specified feature.
 
     Parameters:
-        G (networkx.Graph): The input graph.
+        graph (networkx.Graph): The input graph.
 
     Returns:
         list: A list containing the colors of the nodes.
@@ -71,7 +83,7 @@ def color_nodes(G: nx.Graph) -> list[int]:
 
     community_map = {}
     # obtain all possible keys from the networkx nodes dictionary
-    nodes = G.nodes(data=True)
+    nodes = graph.nodes(data=True)
     # obtain the features in the graph of keys
     data_keys = list(set([key for node in nodes for key in node[1].keys()]))
 
@@ -82,13 +94,13 @@ def color_nodes(G: nx.Graph) -> list[int]:
     data_vals = list(set([val for node in nodes for val in node[1].values()]))
 
     # create the community map
-    for node in G.nodes(data=True):
+    for node in graph.nodes(data=True):
         for val in data_vals:
             if node[1][data_keys[0]] == val:
                 community_map[node[0]] = data_vals.index(val)
 
     # create node coloring according to an index, i.e. colors have value 0, 1, 2, 3, 4
-    node_color = [community_map[node] for node in G.nodes()]
+    node_color = [community_map[node] for node in graph.nodes()]
     return node_color
 
 
