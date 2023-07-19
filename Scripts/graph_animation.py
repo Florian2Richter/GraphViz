@@ -220,6 +220,7 @@ node_color = color_nodes(G)
 
 # generate the initial data
 nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
+
 # Generate animation here
 images = []
 for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
