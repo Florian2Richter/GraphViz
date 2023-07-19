@@ -186,9 +186,8 @@ def _convert_fig_image(fig):
     image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
     return image
 
-def generate_image(graph, node_color, dimension = 3, optimal_dist = 0.15, max_iterations = 20, print_label = False, azi = 0):
+def generate_image(nodes, edges, node_color, dimension = 3, print_label = False, azi = 0):
     # generates PIL image 
-    nodes, edges = graph_coordinates(graph, dimension, optimal_dist, max_iterations)
     fig = plt.figure()
     ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
     image = _convert_fig_image(fig)
@@ -205,7 +204,7 @@ graphs = { 'football' : 'football',
 
 
 # constants
-dimension = 2
+dimension = 3
 optimal_dist = 0.15
 max_iterations = 100
 print_label = False
@@ -219,10 +218,12 @@ G = load_dataset(graphs[dataset_key])
 # color nodes according to their community
 node_color = color_nodes(G)
 
+# generate the initial data
+nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
 # Generate animation here
 images = []
 for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
-    image = generate_image(G, node_color, dimension, optimal_dist, max_iterations, print_label, azi = azi)
+    image = generate_image(nodes, edges, node_color, dimension, print_label, azi = azi)
     images.append(image)
 
 # Save the animation as a GIF
