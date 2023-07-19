@@ -5,11 +5,13 @@ import zipfile
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+import cProfile
+import argparse
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from tqdm import tqdm
-import cProfile
+
 
 # Output directory for the images
 OUTPUT_DIR = '../output_images'
@@ -237,9 +239,16 @@ def main():
 
 
 if __name__ == "__main__":
-    # Profile the main function
-    profiler = cProfile.Profile()
-    profiler.enable()
-    main()
-    profiler.disable()
-    profiler.print_stats(sort="cumtime")
+    parser = argparse.ArgumentParser(description='Generate either 2-D or 3-D animation of network graph using spring layout')
+    parser.add_argument('-p', '--profile', action='store_true', help='Enable profiling')
+    args = parser.parse_args()
+
+    if args.profile:
+        # Profile the main function
+        profiler = cProfile.Profile()
+        profiler.enable()
+        main()
+        profiler.disable()
+        profiler.print_stats(sort="cumtime")
+    else:
+        main()
