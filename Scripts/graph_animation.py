@@ -152,6 +152,9 @@ def create_axes(fig: plt.figure,
 
     if dim == 2:
         ax = fig.add_subplot(111)
+        ax.set_xlim(-1, 1)
+        ax.set_ylim(-1, 1)
+        
         # rotate points according to azimuth
         theta = np.radians(azi)
         rotation_matrix = np.array([
@@ -204,31 +207,31 @@ def main():
     graphs = {'football': 'football', 'karate': 'karate'}
 
     # constants
-    dimension = 3
-    optimal_dist = 0.15
-    max_iterations = 100
-    print_label = False
+    DIMENSION = 2
+    OPTIMAL_DIST = 0.15
+    MAX_ITERATIONS = 100
+    PRINT_LABEL = False
     # initial_azi = 0
-    azimuth_max = 360
-    dataset_key = 'football'
+    AZIMUTH_MAX = 360
+    DATASET_KEY = 'football'
 
     # load dataset
-    G = load_dataset(graphs[dataset_key])
+    graph = load_dataset(graphs[DATASET_KEY])
 
     # color nodes according to their community
-    node_color = color_nodes(G)
+    node_color = color_nodes(graph)
 
     # generate the initial data
-    nodes, edges = graph_coordinates(G, dimension, optimal_dist, max_iterations)
+    nodes, edges = graph_coordinates(graph, DIMENSION, OPTIMAL_DIST, MAX_ITERATIONS)
 
     # Generate animation here
     images = []
-    for azi in tqdm(range(0, azimuth_max), desc='Generating Images'):
-        image = generate_image(nodes, edges, node_color, dimension, print_label, azi=azi)
+    for azi in tqdm(range(0, AZIMUTH_MAX), desc='Generating Images'):
+        image = generate_image(nodes, edges, node_color, DIMENSION, PRINT_LABEL, azi=azi)
         images.append(image)
 
     # Save the animation as a GIF
-    output_filename = f'{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif'
+    output_filename = f'{OUTPUT_DIR}/animation_{DATASET_KEY}_{DIMENSION}.gif'
     images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
     print(f'successfully generated animation at {output_filename}')
 
