@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 
 # Output directory for the images
-OUTPUT_DIR = '../animations'
+OUTPUT_DIR = "../animations"
 
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
@@ -22,9 +22,9 @@ if not os.path.exists(OUTPUT_DIR):
 
 
 def load_dataset(key: str) -> nx.Graph:
-    if key == 'karate':
+    if key == "karate":
         return nx.karate_club_graph()
-    if key == 'football':
+    if key == "football":
         url = "http://www-personal.umich.edu/~mejn/netdata/football.zip"
 
         sock = urllib.request.urlopen(url)  # open URL
@@ -41,6 +41,7 @@ def load_dataset(key: str) -> nx.Graph:
     else:
         raise ValueError("you have to choose a valid dataset key")
 
+
 def color_nodes(G: nx.Graph) -> list[int]:
     """
     Color the nodes of the input graph G based on a specified feature.
@@ -50,7 +51,7 @@ def color_nodes(G: nx.Graph) -> list[int]:
 
     Returns:
         list: A list containing the colors of the nodes.
-          The colors are represented by integer indices 
+          The colors are represented by integer indices
           corresponding to the unique values of a specified
           feature in the graph.
 
@@ -59,8 +60,8 @@ def color_nodes(G: nx.Graph) -> list[int]:
 
     Description:
         This function takes a graph G and colors its nodes based on a specified feature. The graph
-        should be represented using the NetworkX library. 
-        
+        should be represented using the NetworkX library.
+
         Note:
         - The input graph G should have node attributes containing the specified feature to be used for coloring.
         - The function assumes that the specified feature has discrete and hashable values.
@@ -88,8 +89,10 @@ def color_nodes(G: nx.Graph) -> list[int]:
     node_color = [community_map[node] for node in G.nodes()]
     return node_color
 
-    
-def graph_coordinates(G: nx.Graph,dim: int = 3 , optimal_dist: float = 0.15, max_iterations: int = 10) -> tuple[np.ndarray, list[np.ndarray]]:
+
+def graph_coordinates(
+    G: nx.Graph, dim: int = 3, optimal_dist: float = 0.15, max_iterations: int = 10
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D or 3-D
 
@@ -104,22 +107,27 @@ def graph_coordinates(G: nx.Graph,dim: int = 3 , optimal_dist: float = 0.15, max
         This function creates a 3D visualization of the input graph using the spring layout algorithm.
 
     """
-    
-    pos = nx.spring_layout(G, iterations = max_iterations, dim=dim, seed=1721, k=optimal_dist)
+
+    pos = nx.spring_layout(
+        G, iterations=max_iterations, dim=dim, seed=1721, k=optimal_dist
+    )
 
     # Extract node and edge positions from the layout
     nodes = np.array([pos[v] for v in G])
     edges = np.array([(pos[u], pos[v]) for u, v in G.edges()])
-    
+
     return nodes, edges
 
-def create_axes(fig: plt.figure,
-                nodes: np.ndarray,
-                edges: list[np.ndarray],
-                node_color: list[int],
-                dim: int,
-                print_label: bool = False,
-                azi: float = 20) -> Axes3D:
+
+def create_axes(
+    fig: plt.figure,
+    nodes: np.ndarray,
+    edges: list[np.ndarray],
+    node_color: list[int],
+    dim: int,
+    print_label: bool = False,
+    azi: float = 20,
+) -> Axes3D:
     """
     Create a 2D or 3D axis with visual elements such as nodes and edges.
 
@@ -133,7 +141,7 @@ def create_axes(fig: plt.figure,
     Returns:
         mpl_toolkits.mplot3d.axes3d.Axes3D: The 3D axis object.
 
-    
+
     Note:
         - The node_xyz and edge_xyz should be compatible 3D numpy arrays.
         - The node_color list should correspond to the colors of nodes in node_xyz.
@@ -156,14 +164,13 @@ def create_axes(fig: plt.figure,
         ax = fig.add_subplot(111)
         ax.set_xlim(-1, 1)
         ax.set_ylim(-1, 1)
-        
+
         # rotate points according to azimuth
         theta = np.radians(azi)
-        rotation_matrix = np.array([
-                            [np.cos(theta), -np.sin(theta)],
-                            [np.sin(theta), np.cos(theta)]
-                            ])
-        #transform nodes and edges
+        rotation_matrix = np.array(
+            [[np.cos(theta), -np.sin(theta)], [np.sin(theta), np.cos(theta)]]
+        )
+        # transform nodes and edges
         nodes = np.array([rotation_matrix @ node for node in nodes])
         edges = np.array([(rotation_matrix @ u, rotation_matrix @ v) for u, v in edges])
         # Add labels
@@ -171,7 +178,7 @@ def create_axes(fig: plt.figure,
             label = range(len(node_color))
             for i in range(len(node_color)):
                 ax.text(nodes[i][0], nodes[i][1], label[i])
-    
+
     # create the plot using matplotlib's scatter function
     ax.scatter(*nodes.T, s=100, ec="w", c=node_color)
 
@@ -181,32 +188,33 @@ def create_axes(fig: plt.figure,
 
     # Turn gridlines off
     ax.grid(False)
-    ax.axis('off')
-    
+    ax.axis("off")
+
     return ax
+
 
 def _convert_fig_image(fig):
     canvas = FigureCanvas(fig)
     canvas.draw()
     renderer = canvas.get_renderer()
-    image = Image.frombytes('RGB', canvas.get_width_height(), renderer.tostring_rgb())
+    image = Image.frombytes("RGB", canvas.get_width_height(), renderer.tostring_rgb())
     return image
 
-def generate_image(nodes, edges, node_color, dimension = 3, print_label = False, azi = 0):
-    # generates PIL image 
+
+def generate_image(nodes, edges, node_color, dimension=3, print_label=False, azi=0):
+    # generates PIL image
     fig = plt.figure()
     ax = create_axes(fig, nodes, edges, node_color, dimension, print_label, azi=azi)
     image = _convert_fig_image(fig)
-    #plt.clf()
+    # plt.clf()
     plt.close()
-    
-    return image
 
+    return image
 
 
 def main():
     # available graphs
-    graphs = {'football': 'football', 'karate': 'karate'}
+    graphs = {"football": "football", "karate": "karate"}
 
     # constants
     DIMENSION = 2
@@ -215,7 +223,7 @@ def main():
     PRINT_LABEL = False
     # initial_azi = 0
     AZIMUTH_MAX = 360
-    DATASET_KEY = 'football'
+    DATASET_KEY = "football"
 
     # load dataset
     graph = load_dataset(graphs[DATASET_KEY])
@@ -228,19 +236,25 @@ def main():
 
     # Generate animation here
     images = []
-    for azi in tqdm(range(0, AZIMUTH_MAX), desc='Generating Images'):
-        image = generate_image(nodes, edges, node_color, DIMENSION, PRINT_LABEL, azi=azi)
+    for azi in tqdm(range(0, AZIMUTH_MAX), desc="Generating Images"):
+        image = generate_image(
+            nodes, edges, node_color, DIMENSION, PRINT_LABEL, azi=azi
+        )
         images.append(image)
 
     # Save the animation as a GIF
-    output_filename = f'{OUTPUT_DIR}/animation_{DATASET_KEY}_{DIMENSION}.gif'
-    images[0].save(output_filename, save_all=True, append_images=images[1:], duration=100, loop=0)
-    print(f'successfully generated animation at {output_filename}')
+    output_filename = f"{OUTPUT_DIR}/animation_{DATASET_KEY}_{DIMENSION}.gif"
+    images[0].save(
+        output_filename, save_all=True, append_images=images[1:], duration=100, loop=0
+    )
+    print(f"successfully generated animation at {output_filename}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate either 2-D or 3-D animation of network graph using spring layout')
-    parser.add_argument('-p', '--profile', action='store_true', help='Enable profiling')
+    parser = argparse.ArgumentParser(
+        description="Generate either 2-D or 3-D animation of network graph using spring layout"
+    )
+    parser.add_argument("-p", "--profile", action="store_true", help="Enable profiling")
     args = parser.parse_args()
 
     if args.profile:
