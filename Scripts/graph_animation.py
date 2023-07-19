@@ -11,6 +11,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
 from tqdm import tqdm
+from typing import Union
 
 
 # Output directory for the images
@@ -63,7 +64,8 @@ def color_nodes(G: nx.Graph) -> list[int]:
         should be represented using the NetworkX library.
 
         Note:
-        - The input graph G should have node attributes containing the specified feature to be used for coloring.
+        - The input graph G should have node attributes containing the specified feature to be
+          used for coloring.
         - The function assumes that the specified feature has discrete and hashable values.
     """
 
@@ -94,7 +96,8 @@ def graph_coordinates(
     G: nx.Graph, dim: int = 3, optimal_dist: float = 0.15, max_iterations: int = 10
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """
-    Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D or 3-D
+    Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D
+    or 3-D
 
     Parameters:
         G (networkx.Graph): The input graph.
@@ -104,7 +107,8 @@ def graph_coordinates(
         Tuple[np.ndarray, List[np.ndarray]]: A tuple containing node_xyz and edge_xyz.
 
     Description:
-        This function creates a 3D visualization of the input graph using the spring layout algorithm.
+        This function creates a 3D visualization of the input graph using the spring layout
+        algorithm.
 
     """
 
@@ -127,25 +131,31 @@ def create_axes(
     dim: int,
     print_label: bool = False,
     azi: float = 20,
-) -> Axes3D:
+) -> Union[Axes3D, plt.Axes]:
     """
     Create a 2D or 3D axis with visual elements such as nodes and edges.
 
     Parameters:
         fig (matplotlib.figure.Figure): The figure object to which the 3D axis will be added.
-        node_xyz (numpy.ndarray): A 3D numpy array representing the coordinates of nodes.
-        edge_xyz (list[numpy.ndarray]): A list of 3D numpy arrays representing the coordinates of edges.
+        nodes (numpy.ndarray): A 2D or 3D numpy array representing the coordinates of nodes.
+        edges (list[numpy.ndarray]): A list of 2D or 3D numpy arrays representing the coordinates
+                                     of edges.
         node_color (list[int]): A list containing the colors of the nodes.
-        azim (float): The azimuthal viewing angle of the 3D plot.
+        dim (int): The dimension of the plot. Use 2 for 2D plots or 3 for 3D plots.
+        print_label (bool, optional): If True, labels will be printed next to the nodes.
+            Default is False.
+        azi (float, optional): The azimuthal viewing angle of the 3D plot. Default is 20.
 
     Returns:
-        mpl_toolkits.mplot3d.axes3d.Axes3D: The 3D axis object.
-
+        Union[mpl_toolkits.mplot3d.axes3d.Axes3D, matplotlib.axes._subplots.AxesSubplot]:
+            The 3D or 2D axis object, depending on the specified dimension.
 
     Note:
-        - The node_xyz and edge_xyz should be compatible 3D numpy arrays.
-        - The node_color list should correspond to the colors of nodes in node_xyz.
+        - The 'nodes' and 'edges' should be compatible numpy arrays, with 2D or 3D coordinates
+            depending on the 'dim' parameter.
+        - The 'node_color' list should correspond to the colors of nodes in 'nodes'.
     """
+
     if dim == 3:
         ax = fig.add_subplot(111, projection="3d")
         # optical fine tuning
