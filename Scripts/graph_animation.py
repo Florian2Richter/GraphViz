@@ -40,24 +40,22 @@ def load_dataset(key: str) -> nx.Graph:
     if key == "football":
         url = "http://www-personal.umich.edu/~mejn/netdata/football.zip"
 
-        sock = urllib.request.urlopen(url)  # open URL
-        stream = io.BytesIO(sock.read())  # read into BytesIO "file"
-        sock.close()
-
-        zip_file = zipfile.ZipFile(stream)  # zipfile object
-        # txt = zip_file.read("football.txt").decode()  # read info file
-        gml = zip_file.read("football.gml").decode()  # read gml data
-        # throw away bogus first line with # from mejn files
-        gml = gml.split("\n")[1:]
-        graph = nx.parse_gml(gml)  # parse gml data
-        return graph
+        with urllib.request.urlopen(url) as sock, io.BytesIO(sock.read()) as stream:
+            with zipfile.ZipFile(stream) as zip_file, zip_file.open(
+                "football.gml"
+            ) as gml_file:
+                gml = gml_file.read().decode()  # read gml data
+                # throw away bogus first line with # from mejn files
+                gml = gml.split("\n")[1:]
+                graph = nx.parse_gml(gml)  # parse gml data
+                return graph
 
     raise ValueError("you have to choose a valid dataset key")
 
 
 def color_nodes(graph: nx.Graph) -> list[int]:
     """
-    Color the nodes of the input graph G based on a specified feature.
+    Color the nodes of the input graph based on a specified feature.
 
     Parameters:
         graph (networkx.Graph): The input graph.
@@ -76,7 +74,7 @@ def color_nodes(graph: nx.Graph) -> list[int]:
         should be represented using the NetworkX library.
 
         Note:
-        - The input graph G should have node attributes containing the specified feature to be
+        - The input graph should have node attributes containing the specified feature to be
           used for coloring.
         - The function assumes that the specified feature has discrete and hashable values.
     """
@@ -85,13 +83,13 @@ def color_nodes(graph: nx.Graph) -> list[int]:
     # obtain all possible keys from the networkx nodes dictionary
     nodes = graph.nodes(data=True)
     # obtain the features in the graph of keys
-    data_keys = list(set([key for node in nodes for key in node[1].keys()]))
+    data_keys = list({key for node in nodes for key in node[1].keys()})
 
     if len(data_keys) != 1:
         raise ValueError("There is more than one feature in the graph.")
 
     # obtain the values of the features
-    data_vals = list(set([val for node in nodes for val in node[1].values()]))
+    data_vals = list({val for node in nodes for val in node[1].values()})
 
     # create the community map
     for node in graph.nodes(data=True):
@@ -105,32 +103,28 @@ def color_nodes(graph: nx.Graph) -> list[int]:
 
 
 def graph_coordinates(
-    G: nx.Graph, dim: int = 3, optimal_dist: float = 0.15, max_iterations: int = 10
+    graph: nx.Graph, dim: int = 3, optimal_dist: float = 0.15, max_iterations: int = 10
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D
     or 3-D
 
     Parameters:
-        G (networkx.Graph): The input graph.
-        k (float): Optimal distance between nodes in the spring layout (default=0.15).
+        graph (networkx.Graph): The input graph.
+        optimal_dist (float): Optimal distance between nodes in Fruchterman-Reingold (default=0.15).
 
     Returns:
-        Tuple[np.ndarray, List[np.ndarray]]: A tuple containing node_xyz and edge_xyz.
-
-    Description:
-        This function creates a 3D visualization of the input graph using the spring layout
-        algorithm.
+        Tuple[np.ndarray, List[np.ndarray]]: A tuple containing nodes and edges (as pair of nodes)
 
     """
 
     pos = nx.spring_layout(
-        G, iterations=max_iterations, dim=dim, seed=1721, k=optimal_dist
+        graph, iterations=max_iterations, dim=dim, seed=1721, k=optimal_dist
     )
 
     # Extract node and edge positions from the layout
-    nodes = np.array([pos[v] for v in G])
-    edges = np.array([(pos[u], pos[v]) for u, v in G.edges()])
+    nodes = np.array([pos[v] for v in graph])
+    edges = np.array([(pos[u], pos[v]) for u, v in graph.edges()])
 
     return nodes, edges
 
@@ -240,8 +234,8 @@ def main():
 
     # constants
     DIMENSION = 2
-    OPTIMAL_DIST = 0.15
-    MAX_ITERATIONS = 100
+    OPTIMAL_DIST = 0.15  # optimal Fruchterman-Reingold distance for spring_layout between two nodes
+    MAX_ITERATIONS = 100  # maximal number of iterations for the
     PRINT_LABEL = False
     # initial_azi = 0
     AZIMUTH_MAX = 360
