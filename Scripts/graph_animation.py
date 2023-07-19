@@ -2,11 +2,11 @@ import os
 import urllib.request
 import io
 import zipfile
-import networkx as nx
-import matplotlib.pyplot as plt
-import numpy as np
 import cProfile
 import argparse
+import matplotlib.pyplot as plt
+import numpy as np
+import networkx as nx
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
 from PIL import Image
@@ -14,7 +14,7 @@ from tqdm import tqdm
 
 
 # Output directory for the images
-OUTPUT_DIR = '../output_images'
+OUTPUT_DIR = '../animations'
 
 # Create the output directory if it doesn't exist
 if not os.path.exists(OUTPUT_DIR):
