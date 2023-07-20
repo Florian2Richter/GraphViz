@@ -1,3 +1,67 @@
+"""
+
+This script utilizes various libraries, such as networkx, matplotlib, PIL, and tqdm, to generate
+animated GIFs of network visualizations. It provides functions to load network datasets,
+color nodes based on specified features, create 2D or 3D visualizations of the graph,
+and generate an animated GIF by varying the azimuth angle of the visualization.
+
+Libraries:
+    - os
+    - urllib.request
+    - io
+    - zipfile
+    - cProfile
+    - argparse
+    - typing
+    - numpy
+    - networkx
+    - matplotlib
+    - PIL
+    - tqdm
+
+Constants:
+    - OUTPUT_DIR: Output directory for the generated images.
+
+Functions:
+    - load_dataset: Load the specified network dataset.
+    - color_nodes: Color the nodes of the input graph based on a specified feature.
+    - graph_coordinates: Utilizes the nx.spring_layout() function to generate the position
+                         of the edges either in 2-D or 3-D.
+    - create_axes: Create a 2D or 3D axis with visual elements such as nodes and edges.
+    - generate_image: Generate a PIL image of the network visualization.
+    - main: Generate an animated GIF of a network visualization.
+
+Description:
+    The script provides a main function that loads a network dataset, colorizes the nodes based
+    on a specified feature, and generates an animated GIF by rotating the 3D visualization
+    from 0 to 360 degrees of azimuth angle. The GIF showcases the evolution of the network
+    visualization as the azimuth angle changes.
+
+    The script can be executed from the command line with optional profiling capabilities.
+
+Note:
+    - The script assumes that the specified feature for coloring the nodes has discrete and
+      hashable values.
+    - The script requires the 'tqdm' library for progress bars during the image generation loop.
+
+Dependencies:
+    - networkx
+    - numpy
+    - matplotlib
+    - PIL (Python Imaging Library)
+    - tqdm
+
+Usage:
+    The script can be executed directly, and it generates an animated GIF for the specified dataset
+    and dimension (2D or 3D) in the `OUTPUT_DIR`.
+
+    Example command: python script_name.py
+
+    Additionally, profiling can be enabled by passing the `-p` or `--profile` argument:
+
+    Example command with profiling: python script_name.py -p
+
+"""
 import os
 import urllib.request
 import io
@@ -103,7 +167,7 @@ def color_nodes(graph: nx.Graph) -> list[int]:
 
 
 def graph_coordinates(
-    graph: nx.Graph, dim: int = 3, optimal_dist: float = 0.15, max_iterations: int = 10
+    graph: nx.Graph, plot_settings
 ) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D
@@ -119,7 +183,11 @@ def graph_coordinates(
     """
 
     pos = nx.spring_layout(
-        graph, iterations=max_iterations, dim=dim, seed=1721, k=optimal_dist
+        graph,
+        iterations=plot_settings["max_iterations"],
+        dim=plot_settings["dimension"],
+        seed=1721,
+        k=plot_settings["optimal_dist"],
     )
 
     # Extract node and edge positions from the layout
@@ -131,9 +199,7 @@ def graph_coordinates(
 
 def create_axes(
     axis: Union[Axes3D, plt.Axes],
-    nodes: np.ndarray,
-    edges: list[np.ndarray],
-    node_color: list[int],
+    node_data,
     dim: int,
     print_label: bool = False,
     azi: float = 20,
@@ -161,7 +227,7 @@ def create_axes(
             depending on the 'dim' parameter.
         - The 'node_color' list should correspond to the colors of nodes in 'nodes'.
     """
-
+    nodes, edges, node_color = node_data
     if dim == 3:
         # optical fine tuning
         axis.view_init(elev=50.0, azim=azi)
@@ -215,7 +281,7 @@ def _convert_fig_image(fig):
     return image
 
 
-def generate_image(nodes, edges, node_color, dimension=3, print_label=False, azi=0):
+def generate_image(nodes, edges, node_color, plot_settings, azi=0):
     """
     Generate a PIL image of the network visualization.
 
@@ -234,12 +300,20 @@ def generate_image(nodes, edges, node_color, dimension=3, print_label=False, azi
         PIL.Image: The generated PIL image of the network visualization.
     """
     fig = plt.figure()
-    axis = fig.add_subplot(111, projection="3d" if dimension == 3 else None)
-    create_axes(axis, nodes, edges, node_color, dimension, print_label, azi=azi)
-    image = _convert_fig_image(fig)
+    axis = fig.add_subplot(
+        111, projection="3d" if plot_settings["dimension"] == 3 else None
+    )
+    node_data = (nodes, edges, node_color)
+    create_axes(
+        axis,
+        node_data,
+        plot_settings["dimension"],
+        plot_settings["print_label"],
+        azi=azi,
+    )
     # plt.clf()
+    image = _convert_fig_image(fig)
     plt.close()
-
     return image
 
 
@@ -271,14 +345,19 @@ def main():
     # available graphs
     graphs = {"football": "football", "karate": "karate"}
 
-    # parameters of the plot
-    dimension = 2
-    optimal_dist = 0.15  # optimal Fruchterman-Reingold distance for spring_layout between two nodes
-    max_iterations = 100  # maximal number of iterations for the
-    print_label = False
-    # initial_azi = 0
-    azimuth_max = 360
+    # loaded_graph
     dataset_key = "football"
+
+    # parameters of the plot
+    plot_settings = {
+        "dimension": 2,
+        "optimal_dist": 0.15,  # optimal Fruchterman-Reingold distance
+        "max_iterations": 100,  # maximal number of iterations for the algortihm
+        "print_label": False,
+    }
+
+    # determines the maximal angle for azimutahl camera track
+    azimuth_max = 360
 
     # load dataset
     graph = load_dataset(graphs[dataset_key])
@@ -287,18 +366,18 @@ def main():
     node_color = color_nodes(graph)
 
     # generate the initial data
-    nodes, edges = graph_coordinates(graph, dimension, optimal_dist, max_iterations)
+    nodes, edges = graph_coordinates(graph, plot_settings)
 
     # Generate animation here
     images = []
     for azi in tqdm(range(0, azimuth_max), desc="Generating Images"):
-        image = generate_image(
-            nodes, edges, node_color, dimension, print_label, azi=azi
-        )
+        image = generate_image(nodes, edges, node_color, plot_settings, azi=azi)
         images.append(image)
 
     # Save the animation as a GIF
-    output_filename = f"{OUTPUT_DIR}/animation_{dataset_key}_{dimension}.gif"
+    output_filename = (
+        f"{OUTPUT_DIR}/animation_{dataset_key}_{plot_settings['dimension']}.gif"
+    )
     images[0].save(
         output_filename, save_all=True, append_images=images[1:], duration=100, loop=0
     )
