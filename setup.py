@@ -16,7 +16,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "graph_viz = your_package.graph_animation:main",
+            "graph_viz = graph_viz.graph_animation:main",
         ],
     },
     author="Florian Richter",
