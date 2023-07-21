@@ -1,3 +1,6 @@
+"""
+Setup configuration for the 'graph_viz' package.
+"""
 from setuptools import setup, find_packages
 
 setup(
