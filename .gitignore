@@ -7,3 +7,6 @@ graph_viz.egg-info/SOURCES.txt
 graph_viz.egg-info/top_level.txt
 build/lib/graph_viz/__init__.py
 build/lib/graph_viz/graph_animation.py
+temp/playground.ipynb
+data/facebook_combined.txt.gz
+animations/animation_petersen_3.gif

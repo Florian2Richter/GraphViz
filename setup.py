@@ -13,6 +13,8 @@ setup(
         "matplotlib",
         "Pillow",
         "tqdm",
+        "pandas",
+        "scipy",
     ],
     entry_points={
         "console_scripts": [

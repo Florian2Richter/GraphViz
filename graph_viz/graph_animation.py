@@ -70,6 +70,7 @@ import cProfile
 import argparse
 from typing import Union, List, Tuple
 import numpy as np
+import pandas as pd
 import networkx as nx
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from mpl_toolkits.mplot3d import Axes3D
@@ -100,7 +101,24 @@ def load_dataset(key: str) -> nx.Graph:
     """
 
     if key == "karate":
+        print("succesfully loaded graph")
         return nx.karate_club_graph()
+    if key == "petersen":
+        print("succesfully loaded graph")
+        return nx.petersen_graph()
+    if key == "facebook":
+        # read graph from pandas
+        facebook = pd.read_csv(
+            "../data/facebook_combined.txt.gz",
+            compression="gzip",
+            sep=" ",
+            names=["start_node", "end_node"],
+        )
+        # generate graph
+        graph = nx.from_pandas_edgelist(facebook, "start_node", "end_node")
+        print("succesfully loaded graph")
+        return graph
+
     if key == "football":
         url = "http://www-personal.umich.edu/~mejn/netdata/football.zip"
 
@@ -112,6 +130,7 @@ def load_dataset(key: str) -> nx.Graph:
                 # throw away bogus first line with # from mejn files
                 gml = gml.split("\n")[1:]
                 graph = nx.parse_gml(gml)  # parse gml data
+                print("succesfully loaded graph")
                 return graph
 
     raise ValueError("you have to choose a valid dataset key")
@@ -142,27 +161,35 @@ def color_nodes(graph: nx.Graph) -> List[int]:
           used for coloring.
         - The function assumes that the specified feature has discrete and hashable values.
     """
-
+    print(f"coloring {graph.number_of_nodes()} nodes")
     community_map = {}
     # obtain all possible keys from the networkx nodes dictionary
     nodes = graph.nodes(data=True)
     # obtain the features in the graph of keys
+    print("extracting keys")
     data_keys = list({key for node in nodes for key in node[1].keys()})
-
-    if len(data_keys) != 1:
+    if len(data_keys) == 0:
+        # no feature per node given so same color
+        return [0 for _node in nodes]
+    if len(data_keys) >= 1:
         raise ValueError("There is more than one feature in the graph.")
 
     # obtain the values of the features
+    print("extracting values")
     data_vals = list({val for node in nodes for val in node[1].values()})
 
     # create the community map
-    for node in graph.nodes(data=True):
+
+    for node in tqdm(
+        graph.nodes(data=True), desc="Processing Nodes", total=graph.number_of_nodes()
+    ):
         for val in data_vals:
             if node[1][data_keys[0]] == val:
                 community_map[node[0]] = data_vals.index(val)
 
     # create node coloring according to an index, i.e. colors have value 0, 1, 2, 3, 4
     node_color = [community_map[node] for node in graph.nodes()]
+    print("successfully colored graph")
     return node_color
 
 
@@ -181,7 +208,7 @@ def graph_coordinates(
         Tuple[np.ndarray, List[np.ndarray]]: A tuple containing nodes and edges (as pair of nodes)
 
     """
-
+    print("calculate spring_layout")
     pos = nx.spring_layout(
         graph,
         iterations=plot_settings["max_iterations"],
@@ -189,11 +216,11 @@ def graph_coordinates(
         seed=1721,
         k=plot_settings["optimal_dist"],
     )
-
+    print("spring layout calculated")
     # Extract node and edge positions from the layout
     nodes = np.array([pos[v] for v in graph])
     edges = np.array([(pos[u], pos[v]) for u, v in graph.edges()])
-
+    print("initial layout done")
     return nodes, edges
 
 
@@ -231,7 +258,7 @@ def create_axes(
     if dim == 3:
         # optical fine tuning
         axis.view_init(elev=50.0, azim=azi)
-        radius = 1.25  # Control this value for axis limits of the plot
+        radius = 1.1  # Control this value for axis limits of the plot
         axis.set_xlim3d(-radius / 2, radius / 2)
         axis.set_zlim3d(-radius / 2, radius / 2)
         axis.set_ylim3d(-radius / 2, radius / 2)
@@ -260,7 +287,7 @@ def create_axes(
                 axis.text(nodes[i][0], nodes[i][1], label[i])
 
     # create the plot using matplotlib's scatter function
-    axis.scatter(*nodes.T, s=100, ec="w", c=node_color)
+    axis.scatter(*nodes.T, s=10, ec="w", c=node_color)
 
     # Plot the edges
     for vizedge in edges:
@@ -343,21 +370,29 @@ def main():
 
     """
     # available graphs
-    graphs = {"football": "football", "karate": "karate"}
+    graphs = {
+        "football": "football",
+        "karate": "karate",
+        "petersen": "petersen",
+        "facebook": "facebook",
+    }
 
     # loaded_graph
-    dataset_key = "football"
+    dataset_key = "facebook"
 
     # parameters of the plot
     plot_settings = {
-        "dimension": 2,
+        "dimension": 3,
         "optimal_dist": 0.15,  # optimal Fruchterman-Reingold distance
-        "max_iterations": 100,  # maximal number of iterations for the algortihm
+        "max_iterations": 15,  # maximal number of iterations for the algortihm
         "print_label": False,
     }
 
     # determines the maximal angle for azimutahl camera track
-    azimuth_max = 360
+    animation_settings = {
+        "azimuth_max": 60,
+        "azimuth_step": 10,
+    }
 
     # load dataset
     graph = load_dataset(graphs[dataset_key])
@@ -370,7 +405,10 @@ def main():
 
     # Generate animation here
     images = []
-    for azi in tqdm(range(0, azimuth_max), desc="Generating Images"):
+    for azi in tqdm(
+        range(0, animation_settings["azimuth_max"], animation_settings["azimuth_step"]),
+        desc="Generating Images",
+    ):
         image = generate_image(nodes, edges, node_color, plot_settings, azi=azi)
         images.append(image)
 
