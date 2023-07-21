@@ -24,8 +24,8 @@ To install the `graph_viz` package, follow the steps below:
 2. Create a virtual enivronment (optional but recommended):
 
    ```bash
-   python3 -m venv env
-   source env/bin/activate # On Windows: env\Scripts\activate
+   python3 -m venv graph_viz
+   source graph_viz/bin/activate # On Windows: graph_viz\Scripts\activate
    ```
 
 3. Install the package:
