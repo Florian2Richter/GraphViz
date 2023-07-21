@@ -10,3 +10,5 @@ build/lib/graph_viz/graph_animation.py
 temp/playground.ipynb
 data/facebook_combined.txt.gz
 animations/animation_petersen_3.gif
+animations/animation_facebook_2.gif
+.gitignore

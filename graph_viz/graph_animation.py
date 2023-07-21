@@ -339,7 +339,11 @@ def generate_image(nodes, edges, node_color, plot_settings, azi=0):
         azi=azi,
     )
     # plt.clf()
+    # 3d image will just be rotated
     image = _convert_fig_image(fig)
+    if plot_settings["dimension"] == 3:
+        return image, fig
+
     plt.close()
     return image
 
@@ -383,15 +387,15 @@ def main():
     # parameters of the plot
     plot_settings = {
         "dimension": 3,
-        "optimal_dist": 0.15,  # optimal Fruchterman-Reingold distance
-        "max_iterations": 15,  # maximal number of iterations for the algortihm
+        "optimal_dist": None,  # optimal Fruchterman-Reingold distance
+        "max_iterations": 30,  # maximal number of iterations for the algortihm
         "print_label": False,
     }
 
     # determines the maximal angle for azimutahl camera track
     animation_settings = {
-        "azimuth_max": 60,
-        "azimuth_step": 10,
+        "azimuth_max": 360,
+        "azimuth_step": 1,
     }
 
     # load dataset
@@ -405,12 +409,21 @@ def main():
 
     # Generate animation here
     images = []
+    if plot_settings["dimension"] == 3:
+        print("generating initial 3-D view")
+        image, fig = generate_image(nodes, edges, node_color, plot_settings, azi=0)
+        images.append(image)
     for azi in tqdm(
         range(0, animation_settings["azimuth_max"], animation_settings["azimuth_step"]),
         desc="Generating Images",
     ):
-        image = generate_image(nodes, edges, node_color, plot_settings, azi=azi)
-        images.append(image)
+        if plot_settings["dimension"] == 3:
+            fig.axes[0].view_init(elev=50.0, azim=azi)
+            image = _convert_fig_image(fig)
+            images.append(image)
+        if plot_settings["dimension"] == 2:
+            image = generate_image(nodes, edges, node_color, plot_settings, azi=azi)
+            images.append(image)
 
     # Save the animation as a GIF
     output_filename = (
