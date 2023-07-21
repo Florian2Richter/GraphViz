@@ -68,7 +68,7 @@ import io
 import zipfile
 import cProfile
 import argparse
-from typing import Union, List, Tuple
+from typing import Union
 import numpy as np
 import networkx as nx
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -117,7 +117,7 @@ def load_dataset(key: str) -> nx.Graph:
     raise ValueError("you have to choose a valid dataset key")
 
 
-def color_nodes(graph: nx.Graph) -> List[int]:
+def color_nodes(graph: nx.Graph) -> list[int]:
     """
     Color the nodes of the input graph based on a specified feature.
 
@@ -168,7 +168,7 @@ def color_nodes(graph: nx.Graph) -> List[int]:
 
 def graph_coordinates(
     graph: nx.Graph, plot_settings
-) -> Tuple[np.ndarray, List[np.ndarray]]:
+) -> tuple[np.ndarray, list[np.ndarray]]:
     """
     Utilizes the nx.spring_layout() function to generate the position of the edges either in 2-D
     or 3-D
