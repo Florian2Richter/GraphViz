@@ -16,8 +16,9 @@ To install the `graph_viz` package, follow the steps below:
 
 1. Clone the repository:
 
-   ```git clone https://github.com/Florian2Richter/graph_viz.git
-      cd graph_viz
+   ```
+   git clone https://github.com/Florian2Richter/graph_viz.git
+   cd graph_viz
    ```
 
 2. Create a virtual enivronment (optional but recommended):
