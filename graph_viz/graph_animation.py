@@ -388,7 +388,7 @@ def main():
 
     # parameters of the plot
     plot_settings = {
-        "dimension": 3,
+        "dimension": 2,
         "optimal_dist": None,  # optimal Fruchterman-Reingold distance
         "max_iterations": 30,  # maximal number of iterations for the algortihm
         "print_label": False,
