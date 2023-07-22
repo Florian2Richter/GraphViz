@@ -384,7 +384,7 @@ def main():
     }
 
     # loaded_graph
-    dataset_key = "football"
+    dataset_key = "facebook"
 
     # parameters of the plot
     plot_settings = {
@@ -415,15 +415,24 @@ def main():
         print("generating initial 3-D view")
         image, fig = generate_image(nodes, edges, node_color, plot_settings, azi=0)
         images.append(image)
-    for azi in tqdm(
-        range(0, animation_settings["azimuth_max"], animation_settings["azimuth_step"]),
-        desc="Generating Images",
-    ):
-        if plot_settings["dimension"] == 3:
+        # then call 3-d view manipulation
+        for azi in tqdm(
+            range(
+                0, animation_settings["azimuth_max"], animation_settings["azimuth_step"]
+            ),
+            desc="Generating Images",
+        ):
             fig.axes[0].view_init(elev=50.0, azim=azi)
             image = _convert_fig_image(fig)
             images.append(image)
-        if plot_settings["dimension"] == 2:
+
+    if plot_settings["dimension"] == 2:
+        for azi in tqdm(
+            range(
+                0, animation_settings["azimuth_max"], animation_settings["azimuth_step"]
+            ),
+            desc="Generating Images",
+        ):
             image = generate_image(nodes, edges, node_color, plot_settings, azi=azi)
             images.append(image)
 
