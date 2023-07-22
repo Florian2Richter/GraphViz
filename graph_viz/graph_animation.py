@@ -171,7 +171,7 @@ def color_nodes(graph: nx.Graph) -> List[int]:
     if len(data_keys) == 0:
         # no feature per node given so same color
         return [0 for _node in nodes]
-    if len(data_keys) >= 1:
+    if len(data_keys) > 1:
         raise ValueError("There is more than one feature in the graph.")
 
     # obtain the values of the features
@@ -287,7 +287,9 @@ def create_axes(
                 axis.text(nodes[i][0], nodes[i][1], label[i])
 
     # create the plot using matplotlib's scatter function
-    axis.scatter(*nodes.T, s=10, ec="w", c=node_color)
+    # the size of the nodes should be depending on the number of nodes
+    point_size = int(1000 / np.sqrt(len(nodes)))
+    axis.scatter(*nodes.T, s=point_size, ec="w", c=node_color)
 
     # Plot the edges
     for vizedge in edges:
@@ -382,7 +384,7 @@ def main():
     }
 
     # loaded_graph
-    dataset_key = "facebook"
+    dataset_key = "football"
 
     # parameters of the plot
     plot_settings = {
